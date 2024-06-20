@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Retriever Operations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="submit"], button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover, button:hover {
+            background-color: #218838;
+        }
+        .output {
+            margin-top: 20px;
+        }
+        .line {
+            border-bottom: 1px solid #ddd;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Data Retriever Operations</h1>
+
+    <h2>Upload Text File</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".txt">
+        <input type="submit" value="Upload">
+    </form>
+
+    <h2>Add New Line</h2>
+    <form id="addForm">
+        <input type="text" name="newLine" placeholder="Enter new line">
+        <input type="submit" value="Add Line">
+    </form>
+
+    <h2>Update Line</h2>
+    <form id="updateForm">
+        <input type="number" name="lineNumber" placeholder="Line number (0-based index)">
+        <input type="text" name="updatedLine" placeholder="Updated line content">
+        <input type="submit" value="Update Line">
+    </form>
+
+    <h2>Delete Line</h2>
+    <form id="deleteForm">
+        <input type="number" name="lineNumber" placeholder="Line number (0-based index)">
+        <input type="submit" value="Delete Line">
+    </form>
+
+    <h2>Read Text</h2>
+    <form id="searchForm">
+        <input type="text" name="query" placeholder="Enter text to search">
+        <input type="submit" value="Search">
+    </form>
+
+    <h2>File Content</h2>
+    <div id="fileContent" class="output"></div>
+</div>
+
+<script>
+    document.getElementById("uploadForm").onsubmit = function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        }).then(response => response.text())
+          .then(data => alert(data));
+    };
+
+    document.getElementById("addForm").onsubmit = function(event) {
+        event.preventDefault();
+        var newLine = this.elements.newLine.value;
+        fetch('/add', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({'newLine': newLine})
+        }).then(response => response.text())
+          .then(data => {
+              alert(data);
+              fetchFileContent();
+          });
+    };
+
+    document.getElementById("updateForm").onsubmit = function(event) {
+        event.preventDefault();
+        var lineNumber = this.elements.lineNumber.value;
+        var updatedLine = this.elements.updatedLine.value;
+        fetch('/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({'lineNumber': lineNumber, 'updatedLine': updatedLine})
+        }).then(response => response.text())
+          .then(data => {
+              alert(data);
+              fetchFileContent();
+          });
+    };
+
+    document.getElementById("deleteForm").onsubmit = function(event) {
+        event.preventDefault();
+        var lineNumber = this.elements.lineNumber.value;
+        fetch('/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({'lineNumber': lineNumber})
+        }).then(response => response.text())
+          .then(data => {
+              alert(data);
+              fetchFileContent();
+          });
+    };
+
+    document.getElementById("searchForm").onsubmit = function(event) {
+        event.preventDefault();
+        var query = this.elements.query.value;
+        fetch('/search?query=' + encodeURIComponent(query))
+            .then(response => response.text())
+            .then(data => document.getElementById("fileContent").innerHTML = data);
+    };
+
+    function fetchFileContent() {
+        fetch('/view')
+            .then(response => response.text())
+            .then(data => document.getElementById("fileContent").innerHTML = data);
+    }
+
+    window.onload = fetchFileContent;
+</script>
+</body>
+</html>
